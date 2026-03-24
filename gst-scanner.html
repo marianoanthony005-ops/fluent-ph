@@ -363,8 +363,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Nu
 <!-- ══ SCANNER ════════════════════════════════════════════ -->
 <div id="scanner">
 
-  <!-- Camera -->
-  <video id="vid" autoplay playsinline muted></video>
+  <!-- Camera — tap anywhere to scan -->
+  <video id="vid" autoplay playsinline muted onclick="manualSnap()" style="cursor:pointer"></video>
   <canvas id="cvs"></canvas>
 
   <!-- Captured frame shown during review -->
@@ -389,13 +389,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Nu
 
   <!-- Bottom bar — minimal -->
   <div id="botBar">
-    <div class="bot-status" id="botStatus">📄 Iharap ang answer sheet sa viewfinder</div>
+    <div class="bot-status" id="botStatus">📄 I-tap ang screen para mag-scan</div>
     <div style="text-align:center;color:rgba(255,255,255,.5);font-size:.72rem;font-weight:600;margin-bottom:8px;text-shadow:0 1px 3px rgba(0,0,0,.7)">
       📏 ~25–35cm ang distansya ng phone sa papel
     </div>
     <div class="bot-row">
       <div class="bot-count">✅ <span id="botCount">0</span> scanned</div>
-      <button class="snap-btn" onclick="manualSnap()">⚡ Scan Now</button>
+      <button class="snap-btn" onclick="manualSnap()">📷 Scan</button>
     </div>
   </div>
 
@@ -626,21 +626,16 @@ function beginDetect(){
     const cc = [m.tl,m.tr,m.bl,m.br].filter(Boolean).length;
     const tot = cc + [m.mt,m.mb,m.ml,m.mr].filter(Boolean).length;
 
-    // Update viewfinder
-    document.getElementById('vf').classList.toggle('aligned', cc === 4);
+    document.getElementById('vf').classList.toggle('aligned', cc >= 2);
 
-    if (cc === 4){
-      document.getElementById('botStatus').textContent = '🔍 Focusing…';
+    if (cc >= 2){
+      document.getElementById('botStatus').textContent = '✅ Detected! Scanning…';
       scanning = true;
       clearInterval(dtimer);
-      // Flash
       const fl = document.getElementById('flash');
       fl.classList.add('on'); setTimeout(() => fl.classList.remove('on'), 120);
-      // Wait 600ms for camera to focus before capturing
-      // (continuous autofocus needs a moment to settle on the document)
       capturedW = cvs.width; capturedH = cvs.height;
       setTimeout(() => {
-        // Re-capture after focus settle
         cvs.width = vid.videoWidth; cvs.height = vid.videoHeight;
         ctx.drawImage(vid, 0, 0);
         capturedW = cvs.width; capturedH = cvs.height;
@@ -649,8 +644,9 @@ function beginDetect(){
         processSheet(cvs, ctx);
       }, 650);
     } else {
+      document.getElementById('vf').classList.remove('aligned');
       document.getElementById('botStatus').textContent =
-        cc >= 2 ? `🔄 ${cc}/4 corners — i-adjust ang papel` : '📄 Iharap ang answer sheet sa viewfinder';
+        cc >= 1 ? `🔄 ${cc} marker nakita — i-adjust ang papel` : '📄 Iharap ang answer sheet sa viewfinder';
     }
   }, 160);
 }
